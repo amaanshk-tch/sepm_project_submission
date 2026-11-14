@@ -11,14 +11,18 @@ async function main() {
   }
   const output = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
 
-  const contractName = "HelloWorld";
-  const sourceFile = Object.keys(output.contracts)
-    .find(f => output.contracts[f][contractName]);
+  // Case-insensitive lookup: the compiled contract is named "helloworld"
+  const wanted = "helloworld";
+  let sourceFile, contractName;
+  for (const f of Object.keys(output.contracts)) {
+    const match = Object.keys(output.contracts[f]).find(n => n.toLowerCase() === wanted);
+    if (match) { sourceFile = f; contractName = match; break; }
+  }
 
   if (!sourceFile) {
     const found = Object.entries(output.contracts)
       .map(([f, c]) => `${f}: ${Object.keys(c).join(", ")}`).join("\n");
-    throw new Error(`Contract ${contractName} not found. Compiled:\n${found}`);
+    throw new Error(`Contract ${wanted} not found. Compiled:\n${found}`);
   }
 
   const { abi, evm } = output.contracts[sourceFile][contractName];
